@@ -1,0 +1,44 @@
+name: gokenfy
+description: "Gokenfy - free music streaming. Better than Spotify."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # UI
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.3.1
+
+  # Local storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.4
+
+  # Networking
+  http: ^1.2.2
+
+  # Streaming / playback
+  youtube_explode_dart: ^3.1.0
+  just_audio: ^0.9.36
+  audio_session: ^0.2.4
+  just_audio_background: ^0.0.1-beta.15
+  video_player: ^2.9.2
+  file_picker: ^8.1.2
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,54 @@
+name: Build Android APK
+
+# Free tier note: for a public repository GitHub Actions is unlimited;
+# private repos get 2,000 build-minutes/month on the free plan.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch: # lets you trigger a build manually from the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gokenfy-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android scaffolding
+        run: flutter create --org com.gokenfy --project-name gokenfy .
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        # Only hard errors fail the build; style lints are non-fatal here.
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Build release APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: gokenfy-apks
+          path: app/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 30

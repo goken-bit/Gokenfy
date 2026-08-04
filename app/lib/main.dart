@@ -1,0 +1,47 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+
+import 'core/theme.dart';
+import 'screens/home_shell.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.gokenfy.audio.channel',
+    androidNotificationChannelName: 'Gokenfy playback',
+    androidNotificationOngoing: true,
+  );
+  runApp(const ProviderScope(child: GokenfyApp()));
+}
+
+class GokenfyApp extends StatelessWidget {
+  const GokenfyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Gokenfy',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.build(),
+      themeMode: ThemeMode.dark,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('de'),
+        Locale('pt'),
+        Locale('hi'),
+        Locale('ja'),
+        Locale('zh'),
+      ],
+      home: const HomeShell(),
+    );
+  }
+}
