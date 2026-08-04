@@ -28,7 +28,7 @@ dependencies:
   # Streaming / playback
   youtube_explode_dart: ^3.1.0
   just_audio: ^0.9.36
-  audio_session: ^0.2.4
+  audio_session: ^0.1.24
   just_audio_background: ^0.0.1-beta.15
   video_player: ^2.9.2
   file_picker: ^8.1.2
