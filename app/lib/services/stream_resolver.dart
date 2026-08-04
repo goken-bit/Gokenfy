@@ -1,4 +1,5 @@
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart'
+    hide StreamInfo;
 
 import '../models/song.dart';
 import '../models/stream_info.dart';
@@ -37,18 +38,12 @@ class StreamResolver {
   Future<String?> resolveVideoUrl(String videoId) async {
     final manifest = await _yt.videos.streamsClient.getManifest(videoId);
     final muxed = manifest.muxed.toList()
-      ..sort(
-        (a, b) =>
-            (b.videoQuality.height ?? 0).compareTo(a.videoQuality.height ?? 0),
-      );
+      ..sort((a, b) => b.size.totalBytes.compareTo(a.size.totalBytes));
     if (muxed.isNotEmpty) return muxed.first.url.toString();
     if (manifest.videoOnly.isNotEmpty) {
       return manifest.videoOnly
           .reduce(
-            (a, b) =>
-                (b.videoQuality.height ?? 0) > (a.videoQuality.height ?? 0)
-                ? b
-                : a,
+            (a, b) => b.size.totalBytes > a.size.totalBytes ? b : a,
           )
           .url
           .toString();

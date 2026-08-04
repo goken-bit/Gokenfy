@@ -41,7 +41,7 @@ class LibraryScreen extends ConsumerWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => _createPlaylist(context),
+                  onPressed: () => _createPlaylist(context, ref),
                   icon: const Icon(
                     Icons.add_circle_outline,
                     color: AppColors.textSecondary,

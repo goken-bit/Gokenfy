@@ -63,7 +63,7 @@ class _ShimmerBoxState extends State<ShimmerBox>
           borderRadius: BorderRadius.circular(widget.radius),
           gradient: LinearGradient(
             begin: _alignment.value,
-            end: Alignment.zero,
+            end: Alignment.center,
             colors: [widget.baseColor, widget.highlightColor, widget.baseColor],
           ),
         ),

@@ -424,7 +424,7 @@ class InnertubeClient {
 
   int? _playlistTrackCount(String t1) {
     final match = RegExp(r'(\d+)\s+(songs?|tracks?)\b').firstMatch(t1);
-    if (match != null) return int.tryParse(match.group(1));
+    if (match != null) return int.tryParse(match.group(1) ?? '');
     return null;
   }
 
@@ -443,8 +443,8 @@ class InnertubeClient {
     final match = RegExp(r'(?:(\d+):)?(\d+):(\d{2})').firstMatch(text);
     if (match == null) return null;
     final h = int.tryParse(match.group(1) ?? '') ?? 0;
-    final m = int.tryParse(match.group(2)) ?? 0;
-    final s = int.tryParse(match.group(3)) ?? 0;
+    final m = int.tryParse(match.group(2) ?? '') ?? 0;
+    final s = int.tryParse(match.group(3) ?? '') ?? 0;
     return ((h * 3600) + (m * 60) + s) * 1000;
   }
 

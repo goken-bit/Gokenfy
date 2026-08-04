@@ -97,7 +97,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                         inactiveColor: AppColors.divider,
                       ),
                     ),
-                    _TimeRow(positionMs: positionMs, durationMs: durationMs),
+                    _TimeRow(
+                      positionMs: positionMs,
+                      durationMs: durationMs.toDouble(),
+                    ),
                     _Controls(player: player),
                     const SizedBox(height: 20),
                     _ExtrasRow(),

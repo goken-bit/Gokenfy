@@ -112,7 +112,8 @@ final playerProvider = StateNotifierProvider<PlayerController, GPlayerState>((
     onTrackStarted: (song) {
       ref.read(libraryProvider.notifier).recordPlay(song);
     },
-    resolveCachedPath: (id) async => ref.read(downloadProvider).pathFor(id),
+    resolveCachedPath: (id) async =>
+        ref.read(downloadProvider.notifier).pathFor(id),
   );
   ref.onDispose(controller.dispose);
   return controller;

@@ -17,7 +17,7 @@ Future<void> showSongActions(
       .read(libraryProvider)
       .likedSongs
       .any((s) => s.id == song.id);
-  final downloads = ref.read(downloadProvider);
+  final downloads = ref.read(downloadProvider.notifier);
   final downloaded = downloads.isDownloaded(song.id);
 
   return showModalBottomSheet(
@@ -67,7 +67,7 @@ Future<void> showSongActions(
               },
             ),
             _ActionItem(
-              icon: Icons.play_next_rounded,
+              icon: Icons.playlist_play,
               label: 'Play next',
               onTap: () {
                 Navigator.pop(ctx);
@@ -171,14 +171,13 @@ void _showAddToPlaylist(BuildContext context, WidgetRef ref, Song song) async {
   if (selected == '__new__') {
     final name = await _promptPlaylistName(context);
     if (name == null || name.isEmpty) return;
-    final created = await notifier.createPlaylist(name, songs: [song]);
-    final snack = ScaffoldMessenger.of(context);
-    snack.showSnackBar(SnackBar(content: Text('Added to "$name"')));
-    _ = created;
+    await notifier.createPlaylist(name, songs: [song]);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Added to "$name"')),
+    );
     return;
   }
   await notifier.addToPlaylist(selected, song);
-  _ = library;
   if (context.mounted) {
     ScaffoldMessenger.of(
       context,

@@ -214,7 +214,7 @@ class _DiscoveryShelves extends ConsumerWidget {
                         subtitle: songs[j].artistNames,
                         onTap: () {
                           ref
-                              .read(playerProvider.notifier)
+                                .read(playerProvider.notifier)
                               .playSong(List.of(songs), j);
                           Navigator.of(context).push(
                             MaterialPageRoute(
