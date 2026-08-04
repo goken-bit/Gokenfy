@@ -220,19 +220,19 @@ class LibraryScreen extends ConsumerWidget {
               ),
             )
           else
-            ..._buildPlaylists(context, notifier, library),
+            ..._buildPlaylists(context, ref, notifier, library),
         ],
       ),
     );
   }
 
-  Future<void> _createPlaylist(BuildContext context) async {
+  Future<void> _createPlaylist(BuildContext context, WidgetRef ref) async {
     final result = await _promptPlaylist(context);
     if (result == null) return;
     final name = result.$1.trim();
     if (name.isEmpty) return;
     final folder = result.$2.trim();
-    await context
+    await ref
         .read(libraryProvider.notifier)
         .createPlaylist(name, folder: folder.isEmpty ? null : folder);
   }
@@ -284,6 +284,7 @@ class LibraryScreen extends ConsumerWidget {
 
   List<Widget> _buildPlaylists(
     BuildContext context,
+    WidgetRef ref,
     LibraryController notifier,
     LibraryState library,
   ) {
@@ -300,21 +301,21 @@ class LibraryScreen extends ConsumerWidget {
           .toList();
       if (inFolder.isEmpty) continue;
       widgets.add(_FolderHeader(name: folder, count: inFolder.length));
-      widgets.addAll(inFolder.map((p) => _playlistTile(context, p)));
+      widgets.addAll(inFolder.map((p) => _playlistTile(context, ref, p)));
     }
     if (noFolder.isNotEmpty) {
-      widgets.addAll(noFolder.map((p) => _playlistTile(context, p)));
+      widgets.addAll(noFolder.map((p) => _playlistTile(context, ref, p)));
     }
     return widgets;
   }
 
-  Widget _playlistTile(BuildContext context, UserPlaylist p) {
+  Widget _playlistTile(BuildContext context, WidgetRef ref, UserPlaylist p) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       onTap: () => Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => PlaylistPage(playlistId: p.id))),
-      onLongPress: () => _assignFolder(context, p),
+      onLongPress: () => _assignFolder(context, ref, p),
       leading: _PlaylistSquare(id: p.id),
       title: Text(
         p.name,
@@ -334,7 +335,11 @@ class LibraryScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _assignFolder(BuildContext context, UserPlaylist p) async {
+  Future<void> _assignFolder(
+    BuildContext context,
+    WidgetRef ref,
+    UserPlaylist p,
+  ) async {
     final controller = TextEditingController(text: p.folder ?? '');
     final folder = await showModalBottomSheet<String>(
       context: context,
@@ -385,7 +390,7 @@ class LibraryScreen extends ConsumerWidget {
     );
     if (folder == null) return;
     final value = folder.trim().isEmpty ? null : folder.trim();
-    await context.read(libraryProvider.notifier).setPlaylistFolder(p.id, value);
+    await ref.read(libraryProvider.notifier).setPlaylistFolder(p.id, value);
   }
 }
 

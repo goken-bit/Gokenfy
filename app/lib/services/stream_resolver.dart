@@ -1,5 +1,4 @@
-import 'package:youtube_explode_dart/youtube_explode_dart.dart'
-    hide StreamInfo;
+import 'package:youtube_explode_dart/youtube_explode_dart.dart' hide StreamInfo;
 
 import '../models/song.dart';
 import '../models/stream_info.dart';
@@ -42,9 +41,7 @@ class StreamResolver {
     if (muxed.isNotEmpty) return muxed.first.url.toString();
     if (manifest.videoOnly.isNotEmpty) {
       return manifest.videoOnly
-          .reduce(
-            (a, b) => b.size.totalBytes > a.size.totalBytes ? b : a,
-          )
+          .reduce((a, b) => b.size.totalBytes > a.size.totalBytes ? b : a)
           .url
           .toString();
     }

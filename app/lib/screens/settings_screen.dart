@@ -153,7 +153,7 @@ class SettingsScreen extends ConsumerWidget {
               'Save or load your library as text',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
-            onTap: () => _showBackupSheet(context),
+            onTap: () => _showBackupSheet(context, ref),
           ),
           ListTile(
             leading: const Icon(
@@ -188,9 +188,9 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showBackupSheet(BuildContext context) async {
+  Future<void> _showBackupSheet(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
-    final library = context.read(libraryProvider.notifier);
+    final library = ref.read(libraryProvider.notifier);
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,

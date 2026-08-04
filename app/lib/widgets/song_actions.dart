@@ -172,9 +172,9 @@ void _showAddToPlaylist(BuildContext context, WidgetRef ref, Song song) async {
     final name = await _promptPlaylistName(context);
     if (name == null || name.isEmpty) return;
     await notifier.createPlaylist(name, songs: [song]);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added to "$name"')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Added to "$name"')));
     return;
   }
   await notifier.addToPlaylist(selected, song);
