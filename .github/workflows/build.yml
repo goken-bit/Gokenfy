@@ -35,6 +35,9 @@ jobs:
       - name: Generate Android scaffolding
         run: flutter create --org com.gokenfy --project-name gokenfy .
 
+      - name: Patch AndroidManifest for audio_service
+        run: python3 ../.github/patch_android_manifest.py
+
       - name: Bump compileSdk for file_picker
         run: |
           sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' android/app/build.gradle.kts

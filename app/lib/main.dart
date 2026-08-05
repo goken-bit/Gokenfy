@@ -8,11 +8,19 @@ import 'screens/home_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.gokenfy.audio.channel',
-    androidNotificationChannelName: 'Gokenfy playback',
-    androidNotificationOngoing: true,
-  );
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('GOKENFY CRASH: ${details.exceptionAsString()}');
+  };
+  try {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.gokenfy.audio.channel',
+      androidNotificationChannelName: 'Gokenfy playback',
+      androidNotificationOngoing: true,
+    );
+  } catch (e) {
+    debugPrint('GOKENFY: just_audio_background init failed: $e');
+  }
   runApp(const ProviderScope(child: GokenfyApp()));
 }
 
