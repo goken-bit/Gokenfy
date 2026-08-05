@@ -86,6 +86,7 @@ class HomeScreen extends ConsumerWidget {
                       width: 140,
                       title: song.title,
                       subtitle: song.artistNames,
+                      imageUrl: song.thumbnailUrl,
                       onTap: () => _play(context, ref, recent, i),
                     ),
                   );
@@ -212,6 +213,7 @@ class _DiscoveryShelves extends ConsumerWidget {
                         width: 140,
                         title: songs[j].title,
                         subtitle: songs[j].artistNames,
+                        imageUrl: songs[j].thumbnailUrl,
                         onTap: () {
                           ref
                               .read(playerProvider.notifier)

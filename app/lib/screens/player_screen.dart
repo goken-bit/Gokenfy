@@ -412,7 +412,7 @@ class _QueueButton extends ConsumerWidget {
         context: context,
         isScrollControlled: true,
         showDragHandle: true,
-        builder: (_) => _QueueSheet(player: player),
+        builder: (_) => const _QueueSheet(),
       ),
       icon: const Icon(
         Icons.queue_music,
@@ -428,12 +428,11 @@ class _QueueButton extends ConsumerWidget {
 }
 
 class _QueueSheet extends ConsumerWidget {
-  const _QueueSheet({required this.player});
-
-  final GPlayerState player;
+  const _QueueSheet();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.watch(playerProvider);
     final notifier = ref.read(playerProvider.notifier);
     return SafeArea(
       child: DraggableScrollableSheet(

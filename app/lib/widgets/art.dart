@@ -101,6 +101,7 @@ class ArtCard extends StatelessWidget {
     required this.seed,
     required this.title,
     this.subtitle,
+    this.imageUrl,
     this.width = 140,
     this.onTap,
   });
@@ -108,6 +109,7 @@ class ArtCard extends StatelessWidget {
   final int seed;
   final String title;
   final String? subtitle;
+  final String? imageUrl;
   final double width;
   final VoidCallback? onTap;
 
@@ -120,7 +122,12 @@ class ArtCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ArtTile(size: width, seed: seed),
+            ArtImage(
+              url: imageUrl,
+              size: width,
+              radius: 10,
+              seed: seed,
+            ),
             const SizedBox(height: 8),
             Text(
               title,
