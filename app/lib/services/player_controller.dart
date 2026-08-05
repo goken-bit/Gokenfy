@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -156,7 +157,8 @@ class PlayerController extends StateNotifier<GPlayerState> {
       }
       await _player.play();
       _onTrackStarted?.call(song);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('GOKENFY PLAY ERROR: $e\n$st');
       if (!mounted) return;
       state = state.copyWith(processing: false, hasError: true, playing: false);
     }
