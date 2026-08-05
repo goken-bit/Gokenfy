@@ -42,6 +42,16 @@ def patch() -> None:
 
     changed = False
 
+    # The in-app stream proxy serves audio over http://127.0.0.1, which Android
+    # blocks by default on API 28+. Allow cleartext to the loopback interface.
+    if "usesCleartextTraffic" not in xml:
+        xml = xml.replace(
+            "<application",
+            '<application android:usesCleartextTraffic="true"',
+            1,
+        )
+        changed = True
+
     if "android.permission.INTERNET" not in xml:
         xml = re.sub(
             r"(<manifest[^>]*>)",
