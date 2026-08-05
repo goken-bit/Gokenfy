@@ -17,7 +17,7 @@ Future<void> main() async {
       androidNotificationChannelId: 'com.gokenfy.audio.channel',
       androidNotificationChannelName: 'Gokenfy playback',
       androidNotificationOngoing: true,
-    );
+    ).timeout(const Duration(seconds: 5));
   } catch (e) {
     debugPrint('GOKENFY: just_audio_background init failed: $e');
   }
