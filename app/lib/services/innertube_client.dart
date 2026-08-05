@@ -84,7 +84,14 @@ class InnertubeClient {
       'query': query,
     }, key: InnertubeConfig.musicKey);
 
-    final results = SearchResults();
+    final results = SearchResults(
+      songs: [],
+      videos: [],
+      albums: [],
+      artists: [],
+      playlists: [],
+      channels: [],
+    );
     try {
       final items = _collectItems(root);
       for (final item in items) {
