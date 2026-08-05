@@ -11,6 +11,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import '../models/player_state.dart';
 import '../models/song.dart';
 import 'storage_service.dart';
+import 'stream_proxy.dart';
 import 'stream_resolver.dart';
 
 /// Wraps just_audio + StreamResolver and exposes playback state.
@@ -35,6 +36,8 @@ class PlayerController extends StateNotifier<GPlayerState> {
   final void Function(Song song)? _onTrackStarted;
   final Random _rand = Random();
   final List<StreamSubscription<dynamic>> _subs = [];
+
+  StreamProxy? _proxy;
 
   bool _handlingComplete = false;
 
@@ -150,9 +153,12 @@ class PlayerController extends StateNotifier<GPlayerState> {
           AudioSource.file(cachedPath, tag: _mediaItem(song)),
         );
       } else {
-        final info = await _resolver.resolve(song.id);
+        await _proxy?.dispose();
+        final proxy = StreamProxy(_resolver);
+        _proxy = proxy;
+        final localUrl = await proxy.serve(song.id);
         await _player.setAudioSource(
-          AudioSource.uri(Uri.parse(info.url), tag: _mediaItem(song)),
+          AudioSource.uri(Uri.parse(localUrl), tag: _mediaItem(song)),
         );
       }
       await _player.play();
@@ -465,6 +471,7 @@ class PlayerController extends StateNotifier<GPlayerState> {
     for (final s in _subs) {
       s.cancel();
     }
+    _proxy?.dispose();
     _player.dispose();
     super.dispose();
   }
