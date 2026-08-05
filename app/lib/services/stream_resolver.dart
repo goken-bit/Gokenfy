@@ -13,9 +13,25 @@ class StreamResolver {
 
   final YoutubeExplode _yt;
 
-  /// Returns the best (largest) audio-only stream for [videoId].
+  /// Returns a playable stream for [videoId].
+  ///
+  /// YouTube now throttles audio-only streams to a short preview (~786KB)
+  /// unless the client presents a valid PO token. Muxed (video+audio) streams
+  /// are served in full, so we prefer them; just_audio/ExoPlayer plays the
+  /// audio track and ignores the video.
   Future<StreamInfo> resolve(String videoId) async {
     final manifest = await _yt.videos.streamsClient.getManifest(videoId);
+    final muxed = manifest.muxed.toList()
+      ..sort((a, b) => b.size.totalBytes.compareTo(a.size.totalBytes));
+    if (muxed.isNotEmpty) {
+      final best = muxed.first;
+      return StreamInfo(
+        url: best.url.toString(),
+        container: best.container.name,
+        audioCodec: best.audioCodec,
+        contentLength: best.size.totalBytes,
+      );
+    }
     final audio = manifest.audioOnly.toList()
       ..sort((a, b) => b.size.totalBytes.compareTo(a.size.totalBytes));
     if (audio.isEmpty) {
