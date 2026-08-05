@@ -45,6 +45,11 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Patch file_picker compileSdk to 36
+        run: |
+          sed -i 's/compileSdk 34/compileSdk 36/' \
+            "$HOME/.pub-cache/hosted/pub.dev/file_picker"*/android/build.gradle
+
       - name: Analyze
         # Only hard errors fail the build; style lints are non-fatal here.
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
