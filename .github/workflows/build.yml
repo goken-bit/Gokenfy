@@ -38,6 +38,9 @@ jobs:
       - name: Patch AndroidManifest for audio_service
         run: python3 ../.github/patch_android_manifest.py
 
+      - name: Configure stable release signing
+        run: python3 ../.github/patch_signing.py
+
       - name: Bump compileSdk for file_picker
         run: |
           sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' android/app/build.gradle.kts
