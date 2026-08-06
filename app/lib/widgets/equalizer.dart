@@ -32,14 +32,14 @@ class _EqualizerState extends State<Equalizer>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   final math.Random _rand = math.Random();
-  late List<double> _heights;
+  late List<double> _jitter;
 
   @override
   void initState() {
     super.initState();
-    _heights = List.generate(
+    _jitter = List.generate(
       widget.barCount,
-      (_) => 0.3 + _rand.nextDouble() * 0.3,
+      (_) => _rand.nextDouble() * 0.3,
     );
     _controller = AnimationController(
       vsync: this,
@@ -81,11 +81,11 @@ class _EqualizerState extends State<Equalizer>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(widget.barCount, (i) {
-            // Smooth pseudo-random bounce per bar.
+            // Smooth pseudo-random bounce per bar (jitter precomputed once to
+            // avoid the bars "shaking" on every frame).
             final wave = 0.6 + 0.4 * math.sin(i * 2.3 + t * 2 * math.pi);
-            final jitter = _rand.nextDouble() * 0.3;
             final heightFactor = widget.active
-                ? (wave * 0.5 + 0.5) * 0.55 + jitter
+                ? (wave * 0.5 + 0.5) * 0.55 + _jitter[i]
                 : 0.25;
             final h = (widget.height * heightFactor).clamp(3.0, widget.height);
             return Container(

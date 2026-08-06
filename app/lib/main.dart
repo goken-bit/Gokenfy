@@ -16,7 +16,12 @@ Future<void> main() async {
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.gokenfy.audio.channel',
       androidNotificationChannelName: 'Gokenfy playback',
+      androidNotificationChannelDescription:
+          'Keeps music playing while you use other apps.',
       androidNotificationOngoing: true,
+      // Keep the foreground service alive even when paused so the system does
+      // not reclaim the process while the app is in the background.
+      androidStopForegroundOnPause: false,
     ).timeout(const Duration(seconds: 5));
   } catch (e) {
     debugPrint('GOKENFY: just_audio_background init failed: $e');

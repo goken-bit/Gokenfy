@@ -10,6 +10,7 @@ import 'services/download_controller.dart';
 import 'services/innertube_client.dart';
 import 'services/library_controller.dart';
 import 'services/player_controller.dart';
+import 'services/search_history_controller.dart';
 import 'services/spotify_csv_importer.dart';
 import 'services/storage_service.dart';
 import 'services/stream_resolver.dart';
@@ -29,6 +30,14 @@ final searchProvider = FutureProvider.family<SearchResults, String>((
   final q = query.trim();
   if (q.isEmpty) return SearchResults.empty;
   return ref.read(innertubeClientProvider).search(q);
+});
+
+/// Recently submitted search terms (most recent first).
+final searchHistoryProvider = StateNotifierProvider<SearchHistoryController,
+    List<String>>((ref) {
+  final controller = SearchHistoryController(ref.read(storageProvider));
+  controller.load();
+  return controller;
 });
 
 /// Synced lyrics for a track (timed segments from YT Music).

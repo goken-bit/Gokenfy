@@ -171,6 +171,27 @@ class StorageService {
   }
 
   // -------------------------------------------------------------------------
+  // Search history
+  // -------------------------------------------------------------------------
+
+  Future<List<String>> loadSearchHistory() async {
+    await _ensure();
+    final raw = _prefsBox!.get('searchHistory');
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return list.whereType<String>().toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveSearchHistory(List<String> entries) async {
+    await _ensure();
+    await _prefsBox!.put('searchHistory', jsonEncode(entries));
+  }
+
+  // -------------------------------------------------------------------------
   // Helpers
   // -------------------------------------------------------------------------
 

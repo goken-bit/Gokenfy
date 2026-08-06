@@ -200,13 +200,22 @@ class PlayerController extends StateNotifier<GPlayerState> {
       await _loadCurrent();
       return;
     }
+    // Optimistically flip the flag so the UI responds instantly; the
+    // playerStateStream reconciles with the real value.
     if (_player.playing) {
+      state = state.copyWith(playing: false);
       await _player.pause();
     } else {
       if (_player.processingState == ProcessingState.completed) {
         await _player.seek(Duration.zero);
       }
-      await _player.play();
+      state = state.copyWith(playing: true);
+      try {
+        await _player.play();
+      } catch (e) {
+        debugPrint('GOKENFY PLAY ERROR: $e');
+        state = state.copyWith(playing: false, hasError: true);
+      }
     }
   }
 

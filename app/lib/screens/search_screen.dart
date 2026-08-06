@@ -43,6 +43,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     });
   }
 
+  void _searchNow(String value) {
+    _debounce?.cancel();
+    _controller.text = value;
+    final q = value.trim();
+    if (q.isEmpty) return;
+    setState(() => _query = q);
+    ref.invalidate(searchProvider(q));
+    ref.read(searchHistoryProvider.notifier).add(q);
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -71,7 +81,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: SearchBar(
               controller: _controller,
               onChanged: _onChanged,
-              hintText: 'What do you want to listen to?',
+              onSubmitted: (value) {
+                final q = value.trim();
+                if (q.isEmpty) return;
+                setState(() => _query = q);
+                ref.invalidate(searchProvider(q));
+                ref.read(searchHistoryProvider.notifier).add(q);
+              },              hintText: 'What do you want to listen to?',
               backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
               elevation: const WidgetStatePropertyAll(0),
               leading: const Padding(
@@ -96,7 +112,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           Expanded(
             child: _query.isEmpty
-                ? const _BrowseAll()
+                ? _BrowseAll(onSearch: _searchNow)
                 : _ResultsView(query: _query),
           ),
         ],
@@ -347,11 +363,14 @@ class _SearchResultsList extends ConsumerWidget {
   }
 }
 
-class _BrowseAll extends StatelessWidget {
-  const _BrowseAll();
+class _BrowseAll extends ConsumerWidget {
+  const _BrowseAll({required this.onSearch});
+
+  final void Function(String query) onSearch;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final history = ref.watch(searchHistoryProvider);
     const genres = [
       'Pop',
       'Hip-Hop',
@@ -373,6 +392,60 @@ class _BrowseAll extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: 90),
       children: [
+        if (history.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 8, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent searches',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      ref.read(searchHistoryProvider.notifier).clear(),
+                  child: const Text(
+                    'Clear all',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final term in history)
+                  InputChip(
+                    label: Text(term),
+                    backgroundColor: AppColors.surface,
+                    side: BorderSide(color: AppColors.divider.withValues(alpha: 0.6)),
+                    labelStyle: const TextStyle(color: AppColors.textPrimary),
+                    deleteIcon: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () => onSearch(term),
+                    onDeleted: () =>
+                        ref.read(searchHistoryProvider.notifier).remove(term),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
         const SectionHeader(title: 'Browse all'),
         GridView.builder(
           shrinkWrap: true,
@@ -386,7 +459,7 @@ class _BrowseAll extends StatelessWidget {
           ),
           itemCount: genres.length,
           itemBuilder: (context, i) => GestureDetector(
-            onTap: () {},
+            onTap: () => onSearch(genres[i]),
             child: DecoratedBox(
               decoration: BoxDecoration(gradient: ArtGradients.of(i)),
               child: Padding(
