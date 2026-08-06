@@ -153,7 +153,9 @@ class InnertubeClient {
               if (item is! Map) continue;
               final lr = item['musicResponsiveListItemRenderer'];
               if (lr is! Map) continue;
-              final parsed = _parseListItem(lr);
+              final parsed = _parseListItem(
+                (lr as Map).cast<String, dynamic>(),
+              );
               if (parsed is Song && !parsed.isVideo) topSongs.add(parsed);
             }
           }
@@ -240,7 +242,7 @@ class InnertubeClient {
         if (item is! Map) continue;
         final lr = item['musicResponsiveListItemRenderer'];
         if (lr is! Map) continue;
-        final parsed = _parseListItem(lr);
+        final parsed = _parseListItem((lr as Map).cast<String, dynamic>());
         if (parsed is Song) songs.add(parsed);
       }
     }
