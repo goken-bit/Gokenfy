@@ -118,79 +118,141 @@ class InnertubeClient {
   // ---------------------------------------------------------------------------
 
   /// Fetches synced lyrics for a track (timed segments from YT Music).
+  ///
+  /// YouTube Music no longer exposes lyrics through the old
+  /// `getTranscriptEndpoint`/`get_transcript` flow. It now serves them as a
+  /// browse page: `next` returns a "Lyrics" tab with an `MPLYt...` browseId,
+  /// and browsing that id (with the Android client) returns timed segments.
   Future<List<LyricLine>> lyrics(String videoId) async {
     final next = await _post(InnertubeConfig.musicBase, 'next', {
       ..._context(),
+      'enablePersistentPlaylistPanel': true,
+      'isAudioOnly': true,
+      'tunerSettingValue': 'AUTOMIX_SETTING_NORMAL',
       'videoId': videoId,
+      'playlistId': 'RDAMVM$videoId',
+      'watchEndpointMusicSupportedConfigs': {
+        'watchEndpointMusicConfig': {
+          'hasPersistentPlaylistPanel': true,
+          'musicVideoType': 'MUSIC_VIDEO_TYPE_ATV',
+        },
+      },
     }, key: InnertubeConfig.musicKey);
 
-    final params = _findTranscriptParams(next);
-    if (params == null) return const [];
+    final browseId = _findLyricsBrowseId(next);
+    if (browseId == null) return const [];
 
-    final transcript = await _post(
+    // Timed lyrics are only returned to the Android (mobile) client.
+    final browse = await _post(
       InnertubeConfig.musicBase,
-      'get_transcript',
-      {..._context(), 'params': params},
+      'browse',
+      {..._androidContext(), 'browseId': browseId},
       key: InnertubeConfig.musicKey,
     );
 
-    final segments = _at(transcript, [
-      'actions',
-      0,
-      'openEngagementPanelAction',
-      'content',
-      'transcriptRenderer',
-      'content',
-      'transcriptSearchPanelRenderer',
-      'body',
-      'transcriptSegmentListRenderer',
-      'initialSegments',
+    final data = _at(browse, [
+      'contents',
+      'elementRenderer',
+      'newElement',
+      'type',
+      'componentType',
+      'model',
+      'timedLyricsModel',
+      'lyricsData',
+      'timedLyricsData',
     ]);
-    if (segments is! List || segments.isEmpty) return const [];
+    if (data is! List || data.isEmpty) {
+      // No timed segments from the Android client — try static lyrics from the
+      // web client (a plain multi-line description shelf).
+      return _parseStaticLyrics(browseId);
+    }
 
     final out = <LyricLine>[];
-    for (final seg in segments) {
+    for (final seg in data) {
       if (seg is! Map) continue;
-      final renderer = seg['transcriptSegmentRenderer'];
-      if (renderer is! Map) continue;
-      final text =
-          _runsText(renderer['snippet']) ?? _runsText(renderer['songText']);
-      if (text == null) continue;
+      final text = _asString(seg['lyricLine'])?.trim();
+      if (text == null || text.isEmpty) continue;
+      final cue = seg['cueRange'];
+      if (cue is! Map) continue;
+      final start = int.tryParse('${cue['startTimeMilliseconds']}');
+      if (start == null) continue;
       out.add(
         LyricLine(
           text: text,
-          offsetMs: int.tryParse('${renderer['startTimeMs']}'),
-          endMs: int.tryParse('${renderer['endTimeMs']}'),
+          offsetMs: start,
+          endMs: int.tryParse('${cue['endTimeMilliseconds']}'),
         ),
       );
     }
     return out;
   }
 
-  /// Deep-searches a `next` response for the transcript continuation token.
-  String? _findTranscriptParams(Map<String, dynamic> root) {
-    String? found;
-    void walk(dynamic node) {
-      if (found != null) return;
-      if (node is Map) {
-        final endpoint = node['getTranscriptEndpoint'];
-        if (endpoint is Map) {
-          found = _asString(endpoint['params']);
-          return;
-        }
-        for (final v in node.values) {
-          walk(v);
-        }
-      } else if (node is List) {
-        for (final v in node) {
-          walk(v);
-        }
-      }
-    }
-
-    walk(root);
-    return found;
+  /// Fetches static (untimed) lyrics from the web client's browse page.
+  Future<List<LyricLine>> _parseStaticLyrics(String browseId) async {
+    final web = await _post(
+      InnertubeConfig.musicBase,
+      'browse',
+      {..._context(), 'browseId': browseId},
+      key: InnertubeConfig.musicKey,
+    );
+    final shelf = _at(web, [
+      'contents',
+      'sectionListRenderer',
+      'contents',
+      0,
+      'musicDescriptionShelfRenderer',
+    ]);
+    if (shelf is! Map) return const [];
+    final text = _runsText(shelf['description']);
+    if (text == null) return const [];
+    return text
+        .split('\n')
+        .map((line) => LyricLine(text: line.trim()))
+        .where((l) => l.text.isNotEmpty)
+        .toList();
   }
+
+  /// Finds the selectable "Lyrics" tab browseId (`MPLYt...`) in a `next`
+  /// response. Tabs marked `unselectable` mean lyrics are not available.
+  String? _findLyricsBrowseId(Map<String, dynamic> root) {
+    final tabs = _at(root, [
+      'contents',
+      'singleColumnMusicWatchNextResultsRenderer',
+      'tabbedRenderer',
+      'watchNextTabbedResultsRenderer',
+      'tabs',
+    ]);
+    if (tabs is! List) return null;
+    for (final tab in tabs) {
+      if (tab is! Map) continue;
+      final renderer = tab['tabRenderer'];
+      if (renderer is! Map) continue;
+      if (renderer.containsKey('unselectable')) continue;
+      final browse = _at(renderer, ['endpoint', 'browseEndpoint']);
+      if (browse is! Map) continue;
+      final pageType = _at(browse, [
+        'browseEndpointContextSupportedConfigs',
+        'browseEndpointContextMusicConfig',
+        'pageType',
+      ]);
+      if (pageType != 'MUSIC_PAGE_TYPE_TRACK_LYRICS') continue;
+      final browseId = _asString(browse['browseId']);
+      if (browseId != null && browseId.startsWith('MPLYt_')) return browseId;
+    }
+    return null;
+  }
+
+  /// Android client context; timed lyrics are only served to this client.
+  Map<String, dynamic> _androidContext() => {
+    'context': {
+      'client': {
+        'clientName': 'ANDROID_MUSIC',
+        'clientVersion': '7.21.50',
+        'hl': InnertubeConfig.hl,
+        'gl': InnertubeConfig.gl,
+      },
+    },
+  };
 
   /// Gather every list item from any section layout YouTube currently emits.
   List<Map<String, dynamic>> _collectItems(Map<String, dynamic> root) {
