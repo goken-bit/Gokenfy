@@ -21,9 +21,9 @@ class LyricsScreen extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Lyrics',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -49,21 +49,26 @@ class LyricsScreen extends ConsumerWidget {
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             )
-          : _LyricsBody(songId: song.id),
+          : LyricsView(songId: song.id),
     );
   }
 }
 
-class _LyricsBody extends ConsumerStatefulWidget {
-  const _LyricsBody({required this.songId});
+/// Synced lyrics with auto-highlight of the currently sung line. Falls back to
+/// a static list when the track has no timing data. When [height] is given the
+/// list is bounded (used embedded below the player); otherwise it fills the
+/// parent.
+class LyricsView extends ConsumerStatefulWidget {
+  const LyricsView({super.key, required this.songId, this.height});
 
   final String songId;
+  final double? height;
 
   @override
-  ConsumerState<_LyricsBody> createState() => _LyricsBodyState();
+  ConsumerState<LyricsView> createState() => _LyricsViewState();
 }
 
-class _LyricsBodyState extends ConsumerState<_LyricsBody> {
+class _LyricsViewState extends ConsumerState<LyricsView> {
   final ScrollController _scroll = ScrollController();
   final List<GlobalKey> _keys = [];
   int _active = -1;
@@ -85,13 +90,13 @@ class _LyricsBodyState extends ConsumerState<_LyricsBody> {
       );
     }
     if (lyricsAsync.hasError || (lyricsAsync.valueOrNull?.isEmpty ?? true)) {
-      return Center(
+      return const Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Text(
             'Lyrics are not available for this track.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
         ),
       );
@@ -123,9 +128,9 @@ class _LyricsBodyState extends ConsumerState<_LyricsBody> {
           if (ctx != null) {
             Scrollable.ensureVisible(
               ctx,
-              duration: const Duration(milliseconds: 350),
+              alignment: 0.5,
+              duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
-              alignment: 0.4,
             );
           }
         });
@@ -136,30 +141,39 @@ class _LyricsBodyState extends ConsumerState<_LyricsBody> {
       _keys.add(GlobalKey());
     }
 
-    return ListView.builder(
+    final list = ListView.builder(
       controller: _scroll,
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       itemCount: lyrics.length,
       itemBuilder: (context, i) {
         final isActive = i == _active;
         return Container(
           key: _keys[i],
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            lyrics[i].text,
-            textAlign: TextAlign.left,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
             style: TextStyle(
-              fontSize: isActive ? 22 : 17,
+              fontSize: isActive ? 21 : 16,
               height: 1.35,
               color: isActive
                   ? AppColors.textPrimary
                   : AppColors.textSecondary.withValues(alpha: 0.55),
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
             ),
+            child: Text(
+              lyrics[i].text,
+              textAlign: TextAlign.left,
+            ),
           ),
         );
       },
     );
+
+    if (widget.height == null) {
+      return list;
+    }
+    return SizedBox(height: widget.height, child: list);
   }
 }
 
@@ -171,7 +185,7 @@ class _PlainLyrics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       children: [
         for (final line in lyrics)
           Padding(
@@ -181,7 +195,7 @@ class _PlainLyrics extends StatelessWidget {
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 17,
-                height: 1.3,
+                height: 1.4,
               ),
             ),
           ),
