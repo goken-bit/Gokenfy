@@ -1,9 +1,12 @@
+import 'artist.dart';
+
 /// A playable track resolved from YouTube (audio or video).
 class Song {
   const Song({
     required this.id,
     required this.title,
     this.artistNames = '',
+    this.artists = const [],
     this.album,
     this.thumbnailUrl,
     this.durationMs,
@@ -17,6 +20,7 @@ class Song {
   final String id;
   final String title;
   final String artistNames;
+  final List<Artist> artists;
   final String? album;
   final String? thumbnailUrl;
   final int? durationMs;
@@ -41,6 +45,7 @@ class Song {
       id: id,
       title: title,
       artistNames: artistNames,
+      artists: artists,
       album: album,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       durationMs: durationMs ?? this.durationMs,
@@ -56,6 +61,7 @@ class Song {
     'id': id,
     'title': title,
     'artistNames': artistNames,
+    'artists': artists.map((a) => a.toJson()).toList(),
     'album': album,
     'thumbnailUrl': thumbnailUrl,
     'durationMs': durationMs,
@@ -70,6 +76,10 @@ class Song {
     id: json['id'] as String,
     title: json['title'] as String? ?? '',
     artistNames: json['artistNames'] as String? ?? '',
+    artists: (json['artists'] as List<dynamic>? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(Artist.fromJson)
+        .toList(),
     album: json['album'] as String?,
     thumbnailUrl: json['thumbnailUrl'] as String?,
     durationMs: json['durationMs'] as int?,

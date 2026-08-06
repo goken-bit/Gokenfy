@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/album.dart';
 import '../models/artist.dart';
+import '../models/artist_page.dart';
 import '../models/lyric_line.dart';
 import '../models/playlist.dart';
 import '../models/search_results.dart';
@@ -111,6 +112,139 @@ class InnertubeClient {
     final results = await search(query, limit: limit + 5);
     final songs = results.songs;
     return songs.take(limit).toList();
+  }
+
+  /// Fetches an artist page: header info, top songs and release carousels.
+  Future<ArtistPage> artistPage(String channelId) async {
+    final root = await _post(InnertubeConfig.musicBase, 'browse', {
+      ..._context(),
+      'browseId': channelId,
+    }, key: InnertubeConfig.musicKey);
+
+    final header = root['header']?['musicImmersiveHeaderRenderer'];
+    final name = _runsText(header?['title']) ?? '';
+    final thumbnail = _extractThumb(header?['thumbnail']);
+    final monthly = _runsText(header?['monthlyListenerCount']);
+
+    final sections = _at(root, [
+      'contents',
+      'singleColumnBrowseResultsRenderer',
+      'tabs',
+      0,
+      'tabRenderer',
+      'content',
+      'sectionListRenderer',
+      'contents',
+    ]);
+
+    final topSongs = <Song>[];
+    final albums = <Album>[];
+    final singles = <Album>[];
+    String? about;
+
+    if (sections is List) {
+      for (final sec in sections) {
+        if (sec is! Map) continue;
+        final shelf = sec['musicShelfRenderer'];
+        if (shelf is Map) {
+          final items = shelf['contents'];
+          if (items is List) {
+            for (final item in items) {
+              if (item is! Map) continue;
+              final lr = item['musicResponsiveListItemRenderer'];
+              if (lr is! Map) continue;
+              final parsed = _parseListItem(lr);
+              if (parsed is Song && !parsed.isVideo) topSongs.add(parsed);
+            }
+          }
+          continue;
+        }
+        final carousel = sec['musicCarouselShelfRenderer'];
+        if (carousel is Map) {
+          final carTitle =
+              _runsText(
+                carousel['header']
+                    ?['musicCarouselShelfBasicHeaderRenderer']?['title'],
+              )?.toLowerCase() ??
+              '';
+          final items = carousel['contents'];
+          if (items is List) {
+            final list = <Album>[];
+            for (final item in items) {
+              if (item is! Map) continue;
+              final tr = item['musicTwoRowItemRenderer'];
+              if (tr is! Map) continue;
+              final browse =
+                  tr['navigationEndpoint']?['browseEndpoint'];
+              final browseId = _asString(browse?['browseId']);
+              if (browseId == null || !browseId.startsWith('MPREb_')) {
+                continue;
+              }
+              final subtitle = _runsText(tr['subtitle']) ?? '';
+              list.add(
+                Album(
+                  id: browseId,
+                  title: _runsText(tr['title']) ?? '',
+                  artist: name,
+                  year: int.tryParse(subtitle.replaceAll(RegExp(r'[^\d]'), '')),
+                  thumbnailUrl: _extractThumb(tr['thumbnailRenderer']),
+                ),
+              );
+            }
+            if (carTitle.contains('album')) {
+              albums.addAll(list);
+            } else if (carTitle.contains('single')) {
+              singles.addAll(list);
+            }
+          }
+          continue;
+        }
+        final desc = sec['musicDescriptionShelfRenderer'];
+        if (desc is Map) {
+          about = _runsText(desc['description']);
+        }
+      }
+    }
+
+    return ArtistPage(
+      artist: Artist(id: channelId, name: name, thumbnailUrl: thumbnail),
+      monthlyListeners: monthly,
+      topSongs: topSongs,
+      albums: albums,
+      singles: singles,
+      about: about,
+    );
+  }
+
+  /// Returns the track list for an album (browseId like `MPREb_...`).
+  Future<List<Song>> albumSongs(String browseId) async {
+    final root = await _post(InnertubeConfig.musicBase, 'browse', {
+      ..._context(),
+      'browseId': browseId,
+    }, key: InnertubeConfig.musicKey);
+
+    final items = _at(root, [
+      'contents',
+      'twoColumnBrowseResultsRenderer',
+      'secondaryContents',
+      'sectionListRenderer',
+      'contents',
+      0,
+      'musicShelfRenderer',
+      'contents',
+    ]);
+
+    final songs = <Song>[];
+    if (items is List) {
+      for (final item in items) {
+        if (item is! Map) continue;
+        final lr = item['musicResponsiveListItemRenderer'];
+        if (lr is! Map) continue;
+        final parsed = _parseListItem(lr);
+        if (parsed is Song) songs.add(parsed);
+      }
+    }
+    return songs;
   }
 
   // ---------------------------------------------------------------------------
@@ -341,6 +475,7 @@ class InnertubeClient {
             id: videoId,
             title: t0,
             artistNames: _afterMarker(t1),
+            artists: _flexArtists(flex, 1),
             thumbnailUrl: thumbnail,
             durationMs: _durationToMs(t1),
             isExplicit: isExplicit,
@@ -354,6 +489,7 @@ class InnertubeClient {
             id: videoId,
             title: t0,
             artistNames: _afterMarker(t1),
+            artists: _flexArtists(flex, 1),
             thumbnailUrl: thumbnail,
             durationMs: _durationToMs(t1),
             isVideo: true,
@@ -540,6 +676,33 @@ class InnertubeClient {
       return const {};
     }
     return const {};
+  }
+
+  /// Collects artists from a flex column whose runs carry browse endpoints.
+  List<Artist> _flexArtists(List<dynamic> flex, int index) {
+    try {
+      final col = flex[index];
+      final runs =
+          col['musicResponsiveListItemFlexColumnRenderer']?['text']?['runs'];
+      if (runs is! List) return const [];
+      final out = <Artist>[];
+      for (final run in runs) {
+        if (run is! Map) continue;
+        final text = run['text'];
+        if (text is! String || text.trim().isEmpty) continue;
+        final nav = run['navigationEndpoint'];
+        if (nav is! Map) continue;
+        final browse = nav['browseEndpoint'];
+        if (browse is! Map) continue;
+        final id = browse['browseId'];
+        if (id is String && id.startsWith('UC')) {
+          out.add(Artist(id: id, name: text.trim()));
+        }
+      }
+      return out;
+    } catch (_) {
+      return const [];
+    }
   }
 
   String? _runsText(dynamic text) {

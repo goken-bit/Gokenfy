@@ -2,10 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'models/discovery_shelf.dart';
 import 'models/download_entry.dart';
+import 'models/artist_page.dart';
+import 'models/artist.dart';
 import 'models/library_state.dart';
 import 'models/lyric_line.dart';
 import 'models/player_state.dart';
 import 'models/search_results.dart';
+import 'models/song.dart';
 import 'services/download_controller.dart';
 import 'services/innertube_client.dart';
 import 'services/library_controller.dart';
@@ -46,6 +49,36 @@ final lyricsProvider = FutureProvider.family<List<LyricLine>, String>((
   videoId,
 ) async {
   return ref.read(innertubeClientProvider).lyrics(videoId);
+});
+
+/// Artist page (header, top songs, albums/singles) keyed by channel id.
+final artistPageProvider = FutureProvider.family<ArtistPage, String>((
+  ref,
+  channelId,
+) async {
+  return ref.read(innertubeClientProvider).artistPage(channelId);
+});
+
+/// Track list of an album (browseId like `MPREb_...`).
+final albumSongsProvider = FutureProvider.family<List<Song>, String>((
+  ref,
+  browseId,
+) async {
+  return ref.read(innertubeClientProvider).albumSongs(browseId);
+});
+
+/// Resolves an artist by name via search (fallback when a song lacks ids).
+final artistByNameProvider = FutureProvider.family<Artist?, String>((
+  ref,
+  name,
+) async {
+  final results = await ref
+      .read(innertubeClientProvider)
+      .search(name, limit: 5);
+  for (final a in results.artists) {
+    if (a.name.toLowerCase() == name.toLowerCase()) return a;
+  }
+  return results.artists.isEmpty ? null : results.artists.first;
 });
 
 /// Playable music-video stream URL for a track (null when unavailable).

@@ -12,6 +12,7 @@ import '../widgets/like_button.dart';
 import '../widgets/section_header.dart';
 import '../widgets/song_actions.dart';
 import '../widgets/song_tile.dart';
+import 'artist_screen.dart';
 import 'player_screen.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -245,39 +246,47 @@ class _SearchResultsList extends ConsumerWidget {
               itemCount: results.artists.length,
               itemBuilder: (context, i) {
                 final a = results.artists[i];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: SizedBox(
-                    width: 120,
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 46,
-                          backgroundColor: AppColors.surfaceAlt,
-                          backgroundImage: a.thumbnailUrl != null
-                              ? NetworkImage(a.thumbnailUrl!)
-                              : null,
-                          child: a.thumbnailUrl == null
-                              ? Icon(
-                                  Icons.person,
-                                  color: AppColors.textSecondary,
-                                  size: 36,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          a.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                return InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ArtistScreen(artist: a),
+                    ),
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: SizedBox(
+                      width: 120,
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 46,
+                            backgroundColor: AppColors.surfaceAlt,
+                            backgroundImage: a.thumbnailUrl != null
+                                ? NetworkImage(a.thumbnailUrl!)
+                                : null,
+                            child: a.thumbnailUrl == null
+                                ? Icon(
+                                    Icons.person,
+                                    color: AppColors.textSecondary,
+                                    size: 36,
+                                  )
+                                : null,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            a.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

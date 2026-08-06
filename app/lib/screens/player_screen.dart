@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/haptics.dart';
 import '../core/theme.dart';
+import '../models/artist.dart';
 import '../models/player_state.dart';
 import '../models/song.dart';
 import '../providers.dart';
@@ -11,6 +12,7 @@ import '../widgets/equalizer.dart';
 import '../widgets/like_button.dart';
 import '../widgets/song_tile.dart';
 import 'lyrics_screen.dart';
+import 'artist_screen.dart';
 import 'music_video_screen.dart';
 
 /// Full-screen now-playing page with seek bar and transport controls.
@@ -142,6 +144,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                         songId: song.id,
                         lyricsKey: _lyricsKey,
                       ),
+                      const SizedBox(height: 16),
+                      _ArtistsRow(song: song),
                     ],
                     if (player.hasError) ...[
                       const SizedBox(height: 16),
@@ -520,6 +524,80 @@ class _LyricsSection extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Artists of the current song, shown below the lyrics (tap to explore).
+class _ArtistsRow extends StatelessWidget {
+  const _ArtistsRow({required this.song});
+
+  final Song song;
+
+  @override
+  Widget build(BuildContext context) {
+    final artists = song.artists.isNotEmpty
+        ? song.artists
+        : song.artistNames
+              .split(',')
+              .map((n) => Artist(id: '', name: n.trim()))
+              .where((a) => a.name.isNotEmpty)
+              .toList();
+    if (artists.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Text(
+            artists.length == 1 ? 'Artist' : 'Artists',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 92,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            itemCount: artists.length,
+            itemBuilder: (context, i) {
+              final a = artists[i];
+              return InkWell(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ArtistScreen(artist: a),
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 76,
+                  child: Column(
+                    children: [
+                      ArtImage(url: a.thumbnailUrl, size: 56, radius: 28),
+                      const SizedBox(height: 6),
+                      Text(
+                        a.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
