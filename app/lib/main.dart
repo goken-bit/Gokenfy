@@ -15,7 +15,7 @@ Future<void> main() async {
   try {
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.gokenfy.audio.channel',
-      androidNotificationChannelName: 'Gokenfy playback',
+      androidNotificationChannelName: 'Zen playback',
       androidNotificationChannelDescription:
           'Keeps music playing while you use other apps.',
       androidNotificationOngoing: true,
@@ -26,16 +26,16 @@ Future<void> main() async {
   } catch (e) {
     debugPrint('GOKENFY: just_audio_background init failed: $e');
   }
-  runApp(const ProviderScope(child: GokenfyApp()));
+  runApp(const ProviderScope(child: ZenApp()));
 }
 
-class GokenfyApp extends StatelessWidget {
-  const GokenfyApp({super.key});
+class ZenApp extends StatelessWidget {
+  const ZenApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gokenfy',
+      title: 'Zen',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.build(),
       themeMode: ThemeMode.dark,

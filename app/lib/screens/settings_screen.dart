@@ -175,7 +175,7 @@ class SettingsScreen extends ConsumerWidget {
           const ListTile(
             leading: Icon(Icons.music_note, color: AppColors.accent),
             title: Text(
-              'Gokenfy',
+              'Zen',
               style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
             ),
             subtitle: Text(
@@ -207,7 +207,7 @@ class SettingsScreen extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.file_upload_outlined),
               title: const Text('Import library'),
-              subtitle: const Text('Restore from a Gokenfy .json backup'),
+              subtitle: const Text('Restore from a Zen .json backup'),
               onTap: () => Navigator.pop(ctx, 'import'),
             ),
             const SizedBox(height: 8),

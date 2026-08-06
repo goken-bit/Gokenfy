@@ -42,6 +42,16 @@ def patch() -> None:
 
     changed = False
 
+    # Rename the app (flutter create labels it with the project name).
+    if 'android:label="Zen"' not in xml:
+        xml = re.sub(
+            r'android:label="[^"]*"',
+            'android:label="Zen"',
+            xml,
+            count=1,
+        )
+        changed = True
+
     # The in-app stream proxy serves audio over http://127.0.0.1, which Android
     # blocks by default on API 28+. Allow cleartext to the loopback interface.
     if "usesCleartextTraffic" not in xml:

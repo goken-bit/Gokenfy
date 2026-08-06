@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// Gokenfy design tokens - dark, Spotify-inspired.
+/// Zen design tokens - dark, Spotify-inspired.
 class AppColors {
   AppColors._();
 

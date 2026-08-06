@@ -38,6 +38,9 @@ jobs:
       - name: Patch AndroidManifest for audio_service
         run: python3 ../.github/patch_android_manifest.py
 
+      - name: Install Zen launcher icons
+        run: python3 ../.github/patch_icon.py
+
       - name: Configure stable release signing
         run: python3 ../.github/patch_signing.py
 
