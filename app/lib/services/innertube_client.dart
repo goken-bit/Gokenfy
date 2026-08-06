@@ -226,10 +226,10 @@ class InnertubeClient {
     for (final tab in tabs) {
       if (tab is! Map) continue;
       final renderer = tab['tabRenderer'];
-      if (renderer is! Map) continue;
+      if (renderer is! Map<String, dynamic>) continue;
       if (renderer.containsKey('unselectable')) continue;
       final browse = _at(renderer, ['endpoint', 'browseEndpoint']);
-      if (browse is! Map) continue;
+      if (browse is! Map<String, dynamic>) continue;
       final pageType = _at(browse, [
         'browseEndpointContextSupportedConfigs',
         'browseEndpointContextMusicConfig',
